@@ -12,6 +12,7 @@ import TextInput from '@/components/ui/input/text-input';
 import { FLOOR_ELEMENTS_MAP, type FloorElement } from '@/constants/floorMaps';
 import { colors } from '@/styles/theme';
 import { toast } from 'react-toastify';
+import ConfirmModal from '@/components/layout/modal/confirm';
 
 import * as S from './style';
 
@@ -29,6 +30,15 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
     const [selectedFloor, setSelectedFloor] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedPlace, setHighlightedPlace] = useState('');
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        placeName: string;
+        students: string[];
+    }>({
+        isOpen: false,
+        placeName: '',
+        students: [],
+    });
 
     const { mutateAsync: createLeaveSeat } = useCreateLeaveSeatMutation();
     const { mutateAsync: updateLeaveSeat } = useUpdateLeaveSeatMutation();
@@ -63,7 +73,20 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
     };
 
     const handleLocationClick = async (placeName: string) => {
-        if (placeName && placeName !== '' && placeName !== 'X' && !occupiedPlaces.has(placeName)) {
+        // 이미 이석이 있는 장소인 경우 확인 모달 표시
+        if (occupiedPlaces.has(placeName)) {
+            const occupiedSeats = leaveSeatList.filter(seat => seat.place === placeName);
+            const studentNames = occupiedSeats.flatMap(seat => seat.students);
+            
+            setConfirmModal({
+                isOpen: true,
+                placeName,
+                students: studentNames,
+            });
+            return;
+        }
+        
+        if (placeName && placeName !== '' && placeName !== 'X') {
             try {
                 // 장소 검색 API로 실제 place_id 획득
                 const places = await searchPlaces(placeName, true);
@@ -113,8 +136,61 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
             } catch (error) {
                 console.error(error);
             }
-        } else if (occupiedPlaces.has(placeName)) {
-            toast.warning('이미 이석이 등록된 장소입니다.');
+        }
+    };
+
+    const handleConfirmOccupiedPlace = async () => {
+        const placeName = confirmModal.placeName;
+        setConfirmModal({ isOpen: false, placeName: '', students: [] });
+        
+        try {
+            // 장소 검색 API로 실제 place_id 획득
+            const places = await searchPlaces(placeName, true);
+            const place = places.find(p => p.name === placeName);
+            
+            if (!place) {
+                toast.error('장소를 찾을 수 없습니다.');
+                return;
+            }
+            
+            if (isEditMode && editId) {
+                // 수정 모드: 모든 필드 전송
+                await updateLeaveSeat({
+                    leaveseatId: editId,
+                    data: {
+                        day: formData.day,
+                        period: formData.period,
+                        place: place.id,
+                        cause: formData.cause,
+                        students: formData.students,
+                    }
+                });
+                toast.success('이석이 수정되었습니다.');
+            } else {
+                // 생성 모드
+                if (isFullPeriod) {
+                    // 8~11교시: 8~9교시, 10~11교시 두 번 생성
+                    await createLeaveSeat({
+                        ...formData,
+                        period: 'EIGHT_AND_NINE_PERIOD',
+                        place_id: place.id,
+                    });
+                    await createLeaveSeat({
+                        ...formData,
+                        period: 'TEN_AND_ELEVEN_PERIOD',
+                        place_id: place.id,
+                    });
+                } else {
+                    await createLeaveSeat({
+                        ...formData,
+                        place_id: place.id,
+                    });
+                }
+                toast.success('이석이 작성되었습니다.');
+            }
+            navigate('/manage/record');
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -208,15 +284,12 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
                                 <S.MapWrapper>
                                     {elements.map((el: FloorElement) => {
                                         const isHighlighted = !!highlightedPlace && highlightedPlace === el.name;
-                                        const isOccupied = occupiedPlaces.has(el.name);
                                         const isStairsOrHallway = el.name.includes('계단') || el.name.includes('복도');
-                                        const isClickable = el.name && el.name !== '' && el.name !== 'X' && !isOccupied && !isStairsOrHallway;
+                                        const isClickable = el.name && el.name !== '' && el.name !== 'X' && !isStairsOrHallway;
                                         
                                         let backgroundColor = '#DDDDDD';
                                         if (isHighlighted) {
                                             backgroundColor = colors.primary200;
-                                        } else if (isOccupied) {
-                                            backgroundColor = '#F87067'; // 빨간색 - 이석 있음
                                         } else if (isStairsOrHallway) {
                                             backgroundColor = '#DDDDDD'; // 회색 - 계단/복도
                                         } else if (el.name && el.name !== '' && el.name !== 'X') {
@@ -244,6 +317,30 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
                     </>
                 )}
             </TransformWrapper>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ isOpen: false, placeName: '', students: [] })}
+                onConfirm={handleConfirmOccupiedPlace}
+                title="이미 이석이 등록된 장소입니다"
+                message={
+                    <div>
+                        <div style={{ marginBottom: '12px' }}>
+                            <strong>{confirmModal.placeName}</strong>에 다음 학생들이 이미 이석 중입니다:
+                        </div>
+                        <ul style={{ margin: 0, paddingLeft: '20px', textAlign: 'left' }}>
+                            {confirmModal.students.map((student, index) => (
+                                <li key={index} style={{ marginBottom: '4px' }}>{student}</li>
+                            ))}
+                        </ul>
+                        <div style={{ marginTop: '12px' }}>
+                            그래도 이 장소에 이석을 등록하시겠습니까?
+                        </div>
+                    </div>
+                }
+                cancelText="취소"
+                confirmText="등록"
+            />
         </S.Container>
     );
 }
