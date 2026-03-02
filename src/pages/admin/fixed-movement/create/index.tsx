@@ -23,6 +23,7 @@ export default function FixedMovementFormPage() {
   const updateMutation = useUpdateFixedMovementMutation();
   const queryClient = useQueryClient();
   const isProcessingTeam = useRef(false);
+  const isProcessingStudent = useRef(false);
 
   const { data: detailData } = useQuery(fixedMovementQuery.detail(id));
   
@@ -136,8 +137,15 @@ export default function FixedMovementFormPage() {
    * 학생 검색에서 엔터 키를 눌렀을 때 첫 번째 결과를 선택하는 함수
    */
   const handleStudentEnterKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 한글 입력 중일 때는 무시
+    if (e.nativeEvent.isComposing) return;
+    
     if (e.key === 'Enter' && searchInput && studentResults.length > 0) {
       e.preventDefault();
+      e.stopPropagation();
+      
+      if (isProcessingStudent.current) return;
+      isProcessingStudent.current = true;
       
       const filteredResults = studentResults.filter(student => 
         !selectedStudents.find(s => 
@@ -156,6 +164,10 @@ export default function FixedMovementFormPage() {
           classNumber: student.classNumber 
         });
       }
+      
+      setTimeout(() => {
+        isProcessingStudent.current = false;
+      }, 100);
     }
   };
 
@@ -163,6 +175,9 @@ export default function FixedMovementFormPage() {
    * 팀 검색에서 엔터 키를 눌렀을 때 첫 번째 결과를 선택하는 함수
    */
   const handleTeamEnterKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 한글 입력 중일 때는 무시
+    if (e.nativeEvent.isComposing) return;
+    
     if (e.key === 'Enter' && teamSearchInput && teamResults.length > 0) {
       e.preventDefault();
       e.stopPropagation();
@@ -418,7 +433,11 @@ export default function FixedMovementFormPage() {
               {selectedStudents.map((student) => (
                 <S.StudentCard key={student.studentNumber}>
                   <S.StudentInfo>
-                    <S.StudentNumber>{student.grade && student.classNumber ? `${student.grade}${student.classNumber}${student.studentNumber < 10 ? `0${student.studentNumber}` : student.studentNumber}` : student.studentNumber}</S.StudentNumber>
+                    <S.StudentNumber>
+                      {student.grade && student.classNumber 
+                        ? `${student.grade}${student.classNumber}${String(student.studentNumber % 100).padStart(2, '0')}` 
+                        : student.studentNumber}
+                    </S.StudentNumber>
                     <S.StudentName>{student.name}</S.StudentName>
                   </S.StudentInfo>
                   <S.RemoveButton onClick={() => handleRemoveStudent(student.studentNumber)}>

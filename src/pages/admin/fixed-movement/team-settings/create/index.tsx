@@ -80,12 +80,21 @@ export default function TeamFormPage() {
    * 학생 검색에서 엔터 키를 눌렀을 때 첫 번째 결과를 선택하는 함수
    */
   const handleStudentEnterKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 한글 입력 중일 때는 무시
+    if (e.nativeEvent.isComposing) {
+      console.log('Composing, ignoring');
+      return;
+    }
+    
     if (e.key === 'Enter' && searchInput && studentResults.length > 0) {
       e.preventDefault();
       e.stopPropagation();
       
       console.log('Enter pressed, isProcessing:', isProcessingStudent.current);
-      if (isProcessingStudent.current) return;
+      if (isProcessingStudent.current) {
+        console.log('Already processing, ignoring');
+        return;
+      }
       isProcessingStudent.current = true;
 
       const filteredResults = studentResults.filter(student => {
@@ -200,9 +209,7 @@ export default function TeamFormPage() {
                     .map((student) => (
                       <S.StudentDropdownItem
                         key={student.id}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
+                        onClick={() => {
                           if (isProcessingStudent.current) return;
                           isProcessingStudent.current = true;
                           handleAddStudent({ 
