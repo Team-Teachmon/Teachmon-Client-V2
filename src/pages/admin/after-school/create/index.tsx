@@ -187,8 +187,8 @@ export default function AfterSchoolFormPage() {
   };
 
   const handleSubmit = async () => {
-    if (!teacher || !selectedLocation || !period || !subject || selectedStudents.length === 0) {
-      toast.error('모든 필드를 채워주세요.');
+    if (!teacher || !selectedLocation || !period || !subject) {
+      toast.error('담당 교사, 장소, 교시, 방과후 이름을 입력해주세요.');
       return;
     }
 
