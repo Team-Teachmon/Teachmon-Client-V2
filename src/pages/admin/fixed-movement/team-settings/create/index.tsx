@@ -40,13 +40,13 @@ export default function TeamFormPage() {
           setTeamName(team.name);
           setSelectedStudents(
             team.members.map((m) => ({
-              studentNumber: Number(`${m.grade}${String(m.classNumber).padStart(1, '0')}${String(m.number).padStart(2, '0')}`),
+              studentNumber: m.grade * 1000 + m.classNumber * 100 + m.number,
               name: m.name,
             })),
           );
           const idMap: Record<number, number> = {};
           team.members.forEach((m) => {
-            const studentNumber = Number(`${m.grade}${String(m.classNumber).padStart(1, '0')}${String(m.number).padStart(2, '0')}`);
+            const studentNumber = m.grade * 1000 + m.classNumber * 100 + m.number;
             idMap[studentNumber] = m.id;
           });
           setStudentIdMap(idMap);
@@ -56,13 +56,8 @@ export default function TeamFormPage() {
   }, [isEditMode, teamsData, id]);
 
   const handleAddStudent = (student: Student) => {
-    if (isProcessingStudent.current) return;
     if (!selectedStudents.find(s => s.studentNumber === student.studentNumber)) {
-      isProcessingStudent.current = true;
       setSelectedStudents([...selectedStudents, student]);
-      setTimeout(() => {
-        isProcessingStudent.current = false;
-      }, 100);
     }
     setSearchInput('');
   };
@@ -80,6 +75,7 @@ export default function TeamFormPage() {
       e.stopPropagation();
       
       if (isProcessingStudent.current) return;
+      isProcessingStudent.current = true;
 
       const filteredResults = studentResults.filter(student => {
         const currentStudentNumber = Number(`${student.grade}${student.classNumber}${String(student.number).padStart(2, '0')}`);
@@ -99,6 +95,10 @@ export default function TeamFormPage() {
           classNumber: student.classNumber,
         });
       }
+      
+      setTimeout(() => {
+        isProcessingStudent.current = false;
+      }, 100);
     }
   };
 
@@ -187,6 +187,8 @@ export default function TeamFormPage() {
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          if (isProcessingStudent.current) return;
+                          isProcessingStudent.current = true;
                           handleAddStudent({ 
                             id: typeof student.id === 'number' ? student.id : Number(student.id),
                             studentNumber: Number(`${student.grade}${student.classNumber}${String(student.number).padStart(2, '0')}`), 
@@ -194,6 +196,9 @@ export default function TeamFormPage() {
                             grade: student.grade, 
                             classNumber: student.classNumber 
                           });
+                          setTimeout(() => {
+                            isProcessingStudent.current = false;
+                          }, 100);
                         }}
                       >
                         {student.grade}{student.classNumber}{student.number < 10 ? `0${student.number}` : student.number} {student.name}
