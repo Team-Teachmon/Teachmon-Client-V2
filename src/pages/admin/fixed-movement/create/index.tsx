@@ -88,13 +88,15 @@ export default function FixedMovementFormPage() {
   };
 
   const handleSelectTeam = (teamName: string, teamMembers: TeamSearchResponse['members']) => {
+    // 이미 검색 입력이 비어있으면 중복 호출이므로 무시
+    if (!teamSearchInput) return;
+    
     setTeamSearchInput('');
     const newStudents = teamMembers.map(member => {
-      // 학년반번호 형식으로 변환 (예: 1학년 1반 5번 -> 10105)
-      const studentNumber = Number(`${member.grade}${String(member.classNumber).padStart(1, '0')}${String(member.number).padStart(2, '0')}`);
+      const fullStudentNumber = Number(`${member.grade}${member.classNumber}${String(member.number).padStart(2, '0')}`);
       return {
         id: member.id,
-        studentNumber,
+        studentNumber: fullStudentNumber,
         name: member.name,
         grade: member.grade,
         classNumber: member.classNumber,
@@ -382,7 +384,11 @@ export default function FixedMovementFormPage() {
                   {teamResults.slice(0, 5).map((team) => (
                     <S.StudentDropdownItem
                       key={team.id}
-                      onClick={() => handleSelectTeam(team.name, team.members)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleSelectTeam(team.name, team.members);
+                      }}
                     >
                       {team.name}
                     </S.StudentDropdownItem>
