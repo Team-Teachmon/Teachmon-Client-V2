@@ -123,7 +123,6 @@ export const TextArea = styled.textarea`
     border: 1px solid ${colors.n02};
     border-radius: ${radius.md};
     padding: 12px 20px;
-    font-family: 'Paperlogy', sans-serif;
     font-weight: 400;
     font-size: ${fontSizes.Body};
     line-height: 18.84px;
