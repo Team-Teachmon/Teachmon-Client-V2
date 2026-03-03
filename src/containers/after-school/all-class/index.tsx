@@ -4,7 +4,6 @@ import * as S from './style';
 import type { AllAfterSchool, AfterSchoolSearchParams } from '@/types/after-school';
 import { DAYS, ITEMS_PER_PAGE, DAY_TO_ENGLISH } from '@/constants/after-school';
 import { afterSchoolQuery } from '@/services/after-school/afterSchool.query';
-import { findCurrentQuarter } from '@/utils/branch';
 
 interface AllClassSectionProps {
   selectedGrade: 1 | 2 | 3;
@@ -24,28 +23,22 @@ export default function AllClassSection({
   const [selectedDay, setSelectedDay] = useState(getInitialDay());
   const [timeSlotPages, setTimeSlotPages] = useState<Record<string, number>>({});
 
-  const { data: branchInfo, isLoading: isBranchLoading } = useQuery(afterSchoolQuery.branch());
+  const { data: branchInfo } = useQuery(afterSchoolQuery.branch());
 
-  // 현재 날짜가 속하는 분기 찾기
-  const currentQuarter = findCurrentQuarter(branchInfo || []);
+  const currentBranch = branchInfo?.[0]?.number;
 
   const params: AfterSchoolSearchParams = {
     grade: selectedGrade,
     week_day: DAY_TO_ENGLISH[DAYS[selectedDay]],
     start_period: 8,
     end_period: 11,
+    branch: currentBranch,
   };
-
-  // 분기 정보가 있으면 params에 포함
-  const paramsWithBranch = currentQuarter ? {
-    ...params,
-    branch: currentQuarter.number,
-  } : params;
 
   // React Query가 자동으로 캐싱해줌 - 이미 요청한 요일은 다시 요청하지 않음
   const { data: classes = [] } = useQuery({
-    ...afterSchoolQuery.all(paramsWithBranch),
-    enabled: !isBranchLoading && !!params.grade && !!params.week_day,
+    ...afterSchoolQuery.all(params),
+    enabled: !!currentBranch && !!params.grade && !!params.week_day,
     staleTime: 5 * 60 * 1000, // 5분간 데이터를 fresh 상태로 유지
   });
 

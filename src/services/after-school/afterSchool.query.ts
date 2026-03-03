@@ -34,7 +34,7 @@ export const afterSchoolQuery = {
     queryOptions({
       queryKey: ['afterSchool.all', params],
       queryFn: () => getAllAfterSchool(params),
-      enabled: !!params.grade && !!params.week_day && !!params.start_period && !!params.end_period,
+      enabled: !!params.grade && !!params.week_day && !!params.start_period && !!params.end_period && !!params.branch,
     }),
 
   branch: () =>
