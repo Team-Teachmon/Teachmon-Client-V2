@@ -169,9 +169,12 @@ export default function AfterSchoolFormPage() {
    * 학생/팀 검색에서 엔터 키를 눌렀을 때 첫 번째 결과를 선택하는 함수
    */
   const handleStudentEnterKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 한글 입력 중일 때는 무시
+    if (e.nativeEvent.isComposing) return;
+    
     if (e.key === 'Enter' && studentSearchQuery) {
       e.preventDefault();
-      setStudentSearchQuery('');
+      e.stopPropagation();
 
       if (isTeamMode && teamsData.length > 0) {
         const filteredTeams = teamsData.filter((team: TeamSearchResponse) => {
@@ -193,6 +196,8 @@ export default function AfterSchoolFormPage() {
           handleAddStudent(filteredStudents[0]);
         }
       }
+      
+      setStudentSearchQuery('');
     }
   };
 
