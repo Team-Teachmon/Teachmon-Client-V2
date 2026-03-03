@@ -88,9 +88,7 @@ export default function AfterSchoolFormPage() {
   const debouncedStudentSearch = useDebounce(studentSearchQuery, 300);
   const debouncedLocationSearch = useDebounce(locationSearchQuery, 300);
   const debouncedTeacherSearch = useDebounce(teacherSearchQuery, 300);
-  const periodOptions = isEditMode
-    ? ADMIN_AFTER_SCHOOL_PERIODS.filter((value) => value !== '8~11교시')
-    : ADMIN_AFTER_SCHOOL_PERIODS;
+  const periodOptions = ADMIN_AFTER_SCHOOL_PERIODS;
 
   const { data: studentsData = [] } = useQuery({
     ...searchQuery.students(debouncedStudentSearch),
@@ -214,7 +212,6 @@ export default function AfterSchoolFormPage() {
     try {
       const currentYear = new Date().getFullYear();
       if (isEditMode) {
-        const mappedPeriod = mapSinglePeriod(period);
         const weekDay = editData?.day ? WEEKDAY_MAP[editData.day as keyof typeof WEEKDAY_MAP] : 'MON';
 
         // 수정 모드일 때 최신 데이터 가져오기
@@ -253,10 +250,9 @@ export default function AfterSchoolFormPage() {
           // 최신 데이터를 가져오지 못하면 현재 선택된 학생들로만 진행
         }
 
-        const requestData: UpdateAfterSchoolRequest = {
+        const baseUpdateRequest = {
           grade: selectedStudents.length > 0 ? selectedStudents[0].grade : selectedGrade,
           week_day: weekDay,
-          period: mappedPeriod,
           year: currentYear,
           branch: selectedBranch,
           after_school_id: afterSchoolId || id as string,
@@ -266,7 +262,26 @@ export default function AfterSchoolFormPage() {
           students_id: finalStudentIds,
         };
 
-        await updateAfterSchoolClass(requestData);
+        // 8~11교시인 경우 두 개의 요청으로 분리
+        if (period === '8~11교시') {
+          await Promise.all([
+            updateAfterSchoolClass({
+              ...baseUpdateRequest,
+              period: 'EIGHT_AND_NINE_PERIOD',
+            }),
+            updateAfterSchoolClass({
+              ...baseUpdateRequest,
+              period: 'TEN_AND_ELEVEN_PERIOD',
+            }),
+          ]);
+        } else {
+          const mappedPeriod = mapSinglePeriod(period);
+          await updateAfterSchoolClass({
+            ...baseUpdateRequest,
+            period: mappedPeriod,
+          });
+        }
+
         toast.success('방과후가 성공적으로 수정되었습니다.');
         // 수정 완료 후 localStorage 정리
         localStorage.removeItem('currentAfterSchoolId');
