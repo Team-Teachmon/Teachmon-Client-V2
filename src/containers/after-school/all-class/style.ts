@@ -166,7 +166,7 @@ export const TimeHeader = styled.div`
 `;
 
 export const TimeText = styled.span`
-  font-size: ${fontSizes.H3};
+  font-size: ${fontSizes.H4};
   font-weight: 600;
   color: ${colors.text};
   white-space: nowrap;
@@ -260,7 +260,7 @@ export const EditButton = styled.button`
   font-size: ${fontSizes.Small};
   color: ${colors.primary};
   background: transparent;
-  border: 1px solid ${colors.primary};
+  border: none;
   border-radius: ${radius.sm};
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
