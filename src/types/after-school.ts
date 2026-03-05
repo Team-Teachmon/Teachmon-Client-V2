@@ -100,7 +100,7 @@ export interface MyAfterSchool {
   week_day: string;
   period: string;
   name: string;
-  teacher: Teacher;
+  teacher?: Teacher;
   place: Place;
   students: Student[];
 }
@@ -114,7 +114,7 @@ export interface TodayAfterSchool {
   week_day: string;
   period: string;
   name: string;
-  teacher: Teacher;
+  teacher?: Teacher;
   place: Place;
   students: Student[];
 }

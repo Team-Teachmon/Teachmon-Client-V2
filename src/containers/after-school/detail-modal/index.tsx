@@ -40,15 +40,19 @@ export default function AfterSchoolDetailModal({
         </S.Header>
 
         <S.Content>
-          <S.InfoRow>
-            <S.InfoLabel>담당교사</S.InfoLabel>
-            <S.InfoValue>{classData.teacher.name}</S.InfoValue>
-          </S.InfoRow>
+          {classData.teacher && (
+            <S.InfoRow>
+              <S.InfoLabel>담당교사</S.InfoLabel>
+              <S.InfoValue>{classData.teacher.name}</S.InfoValue>
+            </S.InfoRow>
+          )}
 
-          <S.InfoRow>
-            <S.InfoLabel>장소</S.InfoLabel>
-            <S.InfoValue>{classData.place.name}</S.InfoValue>
-          </S.InfoRow>
+          {classData.place && (
+            <S.InfoRow>
+              <S.InfoLabel>장소</S.InfoLabel>
+              <S.InfoValue>{classData.place.name}</S.InfoValue>
+            </S.InfoRow>
+          )}
 
           {students.length > 0 && (
             <S.StudentGrid>
