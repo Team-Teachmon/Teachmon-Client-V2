@@ -250,7 +250,7 @@ export const ClassCard = styled.div`
 export const CardTopRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
 `;
 
@@ -263,13 +263,7 @@ export const EditButton = styled.button`
   border: none;
   border-radius: ${radius.sm};
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
   white-space: nowrap;
-
-  &:hover {
-    background: ${colors.primary};
-    color: #fff;
-  }
 
   ${mq.mobile} {
     padding: 0.15rem 0.4rem;
