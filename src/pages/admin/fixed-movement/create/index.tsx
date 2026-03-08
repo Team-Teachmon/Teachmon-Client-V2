@@ -97,7 +97,7 @@ export default function FixedMovementFormPage() {
     isProcessingTeam.current = true;
     setTeamSearchInput('');
     
-    const newStudents = teamMembers.map(member => {
+    const newStudents: Student[] = teamMembers.map(member => {
       // grade(1자리) + classNumber(1자리) + number(2자리) = 4자리
       const fullStudentNumber = member.grade * 1000 + member.classNumber * 100 + member.number;
       return {

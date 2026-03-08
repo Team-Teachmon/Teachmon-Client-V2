@@ -35,7 +35,7 @@ export type Period =
   | 'TEN_AND_ELEVEN_PERIOD';
 
 export interface FixedMovementStudentResponse {
-  id?: number;
+  id?: string;
   number: number;
   name: string;
 }
@@ -79,7 +79,7 @@ export interface UpdateFixedMovementResponse {
 
 
 export interface StudentSearchResponse {
-  id: number;
+  id: string;
   grade: number;
   classNumber: number;
   number: number;
@@ -96,7 +96,7 @@ export interface TeamSearchResponse {
   id: string;
   name: string;
   members: {
-    id: number;
+    id: string;
     number: number;
     name: string;
     grade: number;
@@ -107,7 +107,7 @@ export interface TeamResponse {
   id: string;
   name: string;
   members: {
-    id: number;
+    id: string;
     number: number;
     name: string;
     grade: number;
