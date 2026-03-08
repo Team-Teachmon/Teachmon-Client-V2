@@ -8,8 +8,7 @@ import { manageQuery } from '@/services/manage/manage.query';
 import type { StudentSchedule } from '@/types/manage';
 import { useStudentStatus } from '@/hooks/useStudentStatus';
 import { CLASSES } from '@/constants/manage';
-import { PERIOD_MAP, getCurrentPeriod, PERIOD_TO_KOREAN } from '@/utils/period';
-import { getTodayISO } from '@/utils/format';
+import { PERIOD_MAP, getCurrentPeriod, PERIOD_TO_KOREAN, getTodayDate } from '@/utils/period';
 import type { StatusType } from '@/components/ui/status';
 import type { StudentState } from '@/types/manage';
 
@@ -21,7 +20,7 @@ export default function Manage() {
     
     const [selectedGrade, setSelectedGrade] = useState<number>(1);
     const [selectedFloor, setSelectedFloor] = useState<number>(1);
-    const [selectedDate, setSelectedDate] = useState<string>(getTodayISO());
+    const [selectedDate, setSelectedDate] = useState<string>(getTodayDate());
     const [selectedPeriod, setSelectedPeriod] = useState<string>(initialPeriod);
     const [isMapEnabled, setIsMapEnabled] = useState<boolean>(false);
     const [highlightedPlace, setHighlightedPlace] = useState<string>('');
