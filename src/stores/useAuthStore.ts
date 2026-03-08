@@ -15,7 +15,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   setAccessToken: (token) => {
     set({ accessToken: token });
     // axios 인스턴스의 기본 헤더 업데이트
-    console.log(token);
     setAuthToken(token);
   },
   clearAuth: () => {
