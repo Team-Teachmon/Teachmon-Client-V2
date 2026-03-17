@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import MainLayout from '@/components/layout/MainLayout'
+import LandingPage from '@/pages/landing'
 
 const Manage = lazy(() => import('@/pages/manage'))
 const Record = lazy(() => import('@/pages/manage/record'))
@@ -19,7 +20,6 @@ const AdminBusinessTripPage = lazy(() => import('@/pages/admin/business-trip'))
 const SupervisionPage = lazy(() => import('@/pages/supervision'))
 const AfterSchoolExtraPage = lazy(() => import('@/pages/after-school/extra'))
 const ErrorPage = lazy(() => import('./pages/error'))
-const LandingPage = lazy(() => import('@/pages/landing'))
 const AdminAfterSchoolPage = lazy(() => import('@/pages/admin/after-school'))
 const AdminAfterSchoolFormPage = lazy(() => import('@/pages/admin/after-school/create'))
 const BusinessTripPage = lazy(() => import('@/pages/after-school/business-trip'))
