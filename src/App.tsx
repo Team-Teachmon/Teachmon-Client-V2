@@ -1,28 +1,29 @@
+import { lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import MainLayout from '@/components/layout/MainLayout'
 
-import Manage from '@/pages/manage'
-import Record from '@/pages/manage/record'
-import Movement from '@/pages/manage/movement'
-import AdminMain from './pages/admin/main'
-import AdminUsersPage from '@/pages/admin/users'
-import AdminFixedMovementPage from '@/pages/admin/fixed-movement'
-import AdminFixedMovementFormPage from '@/pages/admin/fixed-movement/create'
-import AdminFixedMovementTeamSettingsPage from '@/pages/admin/fixed-movement/team-settings'
-import AdminFixedMovementTeamFormPage from '@/pages/admin/fixed-movement/team-settings/create'
-import HomePage from '@/pages/home'
-import AfterSchoolPage from '@/pages/after-school'
-import SelfStudyPage from '@/pages/admin/self-study'
-import AdminSupervisionPage from '@/pages/admin/supervision'
-import AdminBusinessTripPage from '@/pages/admin/business-trip'
-import SupervisionPage from '@/pages/supervision'
-import AfterSchoolExtraPage from '@/pages/after-school/extra'
-import ErrorPage from './pages/error'
-import LandingPage from '@/pages/landing'
-import AdminAfterSchoolPage from '@/pages/admin/after-school'
-import AdminAfterSchoolFormPage from '@/pages/admin/after-school/create'
-import BusinessTripPage from '@/pages/after-school/business-trip'
-import Oauth from '@/pages/oauth2'
+const Manage = lazy(() => import('@/pages/manage'))
+const Record = lazy(() => import('@/pages/manage/record'))
+const Movement = lazy(() => import('@/pages/manage/movement'))
+const AdminMain = lazy(() => import('./pages/admin/main'))
+const AdminUsersPage = lazy(() => import('@/pages/admin/users'))
+const AdminFixedMovementPage = lazy(() => import('@/pages/admin/fixed-movement'))
+const AdminFixedMovementFormPage = lazy(() => import('@/pages/admin/fixed-movement/create'))
+const AdminFixedMovementTeamSettingsPage = lazy(() => import('@/pages/admin/fixed-movement/team-settings'))
+const AdminFixedMovementTeamFormPage = lazy(() => import('@/pages/admin/fixed-movement/team-settings/create'))
+const HomePage = lazy(() => import('@/pages/home'))
+const AfterSchoolPage = lazy(() => import('@/pages/after-school'))
+const SelfStudyPage = lazy(() => import('@/pages/admin/self-study'))
+const AdminSupervisionPage = lazy(() => import('@/pages/admin/supervision'))
+const AdminBusinessTripPage = lazy(() => import('@/pages/admin/business-trip'))
+const SupervisionPage = lazy(() => import('@/pages/supervision'))
+const AfterSchoolExtraPage = lazy(() => import('@/pages/after-school/extra'))
+const ErrorPage = lazy(() => import('./pages/error'))
+const LandingPage = lazy(() => import('@/pages/landing'))
+const AdminAfterSchoolPage = lazy(() => import('@/pages/admin/after-school'))
+const AdminAfterSchoolFormPage = lazy(() => import('@/pages/admin/after-school/create'))
+const BusinessTripPage = lazy(() => import('@/pages/after-school/business-trip'))
+const Oauth = lazy(() => import('@/pages/oauth2'))
 
 function App() {
   return (

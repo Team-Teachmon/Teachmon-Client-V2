@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Global } from '@emotion/react'
@@ -25,8 +26,10 @@ export default function Root() {
       <QueryClientProvider client={queryClient}>
         <Global styles={globalStyles} />
         <AuthProvider>
-          {isLoading && <Loading />}
-          <App />
+          <Suspense fallback={<Loading />}>
+            {isLoading && <Loading />}
+            <App />
+          </Suspense>
           <ToastContainer />
         </AuthProvider>
       </QueryClientProvider>
