@@ -19,6 +19,12 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const initAuth = async () => {
+      // Oauth 콜백 페이지인 경우 초기 인증을 건너뜁니다
+      if (location.pathname === '/oauth2/callback') {
+        setIsInitialized(true);
+        return;
+      }
+
       try {
         // 리프레시 토큰으로 새 액세스 토큰 발급 시도
         const response = await reissueToken();

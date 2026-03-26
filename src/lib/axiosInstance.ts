@@ -137,8 +137,12 @@ axiosInstance.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        const skipTokenCheck = originalRequest.url?.includes('/auth/reissue') ||
+            originalRequest.url?.includes('/auth/code') ||
+            originalRequest.url?.includes('/auth/logout');
+
         // 401 에러이고 아직 재시도하지 않은 경우
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry && !skipTokenCheck) {
             originalRequest._retry = true;
 
             // 로딩 중지
