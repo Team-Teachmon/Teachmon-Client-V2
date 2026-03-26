@@ -15,7 +15,6 @@ import type { CreateAfterSchoolRequest, AdminAfterSchoolClass, AfterSchoolRespon
 import { WEEKDAY_MAP } from '@/constants/admin';
 import type { Student as CommonStudent } from '@/types/common';
 import * as S from './style';
-import { useQueryClient } from '@tanstack/react-query';
 
 
 interface Student {
@@ -51,8 +50,6 @@ export default function AfterSchoolFormPage() {
   const selectedBranch = createData?.selectedBranch ?? editData?.selectedBranch ?? 1;
   const selectedGrade = createData?.selectedGrade ?? editData?.grade ?? 1;
   const returnPath = editData?.returnPath || '/admin/after-school';
-
-  const queryClient = useQueryClient();
   
   // localStorage에서 afterschool ID 가져오기
   const afterSchoolId = localStorage.getItem('currentAfterSchoolId') || id || '';
