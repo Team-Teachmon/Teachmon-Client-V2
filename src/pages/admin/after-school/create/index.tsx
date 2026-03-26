@@ -301,8 +301,9 @@ export default function AfterSchoolFormPage() {
 
         toast.success('방과후가 성공적으로 수정되었습니다.');
         // 서버 상태 업데이트
-        queryClient.invalidateQueries({
+        await queryClient.invalidateQueries({
           queryKey: ['afterSchool.classes'],
+          refetchType: 'all'
         });
         // 수정 완료 후 localStorage 정리
         localStorage.removeItem('currentAfterSchoolId');
