@@ -14,10 +14,10 @@ interface DetailModalProps {
   teamData?: TeamResponse;
 }
 
-export default function DetailModal({ 
+export default function DetailModal({
   movementId,
-  teamId, 
-  isOpen, 
+  teamId,
+  isOpen,
   onClose,
   teamData
 }: DetailModalProps) {
@@ -32,7 +32,7 @@ export default function DetailModal({
           <S.Header>
             <S.Title>고정 이석 상세 정보</S.Title>
             <S.CloseButton onClick={onClose}>
-                <img src={closeIcon} alt="닫기" />
+              <img src={closeIcon} alt="닫기" />
             </S.CloseButton>
           </S.Header>
           <S.Content>
@@ -71,7 +71,7 @@ export default function DetailModal({
     );
   }
   const displayTeamData = teamData;
-  
+
   if (teamId && displayTeamData) {
     return (
       <Modal isOpen={isOpen} onClose={onClose} padding="0">
@@ -79,7 +79,7 @@ export default function DetailModal({
           <S.Header>
             <S.Title>팀 상세 정보</S.Title>
             <S.CloseButton onClick={onClose}>
-                <img src={closeIcon} alt="닫기" />
+              <img src={closeIcon} alt="닫기" />
             </S.CloseButton>
           </S.Header>
           <S.Content>

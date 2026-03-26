@@ -40,16 +40,16 @@ axiosInstance.interceptors.request.use(
         if (!config.skipLoading) {
             useLoadingStore.getState().startLoading();
         }
-        
+
         // /auth/reissue, /auth/code, /auth/logout 요청은 토큰 체크 스킵
-        const skipTokenCheck = config.url?.includes('/auth/reissue') || 
-                              config.url?.includes('/auth/code') || 
-                              config.url?.includes('/auth/logout');
-        
+        const skipTokenCheck = config.url?.includes('/auth/reissue') ||
+            config.url?.includes('/auth/code') ||
+            config.url?.includes('/auth/logout');
+
         if (!skipTokenCheck) {
             // store에서 현재 토큰 가져오기
             let currentToken = useAuthStore.getState().accessToken;
-            
+
             // 토큰이 없으면 재발급 시도
             if (!currentToken) {
                 try {
@@ -66,30 +66,30 @@ axiosInstance.interceptors.request.use(
                                 reissuePromise = null;
                             });
                     }
-                    
+
                     // 재발급된 토큰 받기
                     const access_token = await reissuePromise;
-                    
+
                     // 현재 요청의 헤더에 새 토큰 적용
                     config.headers.Authorization = `Bearer ${access_token}`;
                 } catch (error) {
                     // 토큰 재발급 실패 시 로그아웃 처리
                     useAuthStore.getState().clearAuth();
                     useUserStore.getState().clearUser();
-                    
+
                     // 로딩 중지
                     if (!config.skipLoading) {
                         useLoadingStore.getState().stopLoading();
                     }
-                    
+
                     // 토스트 메시지 표시
                     toast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
-                    
+
                     // 루트 페이지로 리다이렉트
                     if (window.location.pathname !== '/') {
                         window.location.href = '/';
                     }
-                    
+
                     return Promise.reject(error);
                 }
             } else {
@@ -99,7 +99,7 @@ axiosInstance.interceptors.request.use(
                 }
             }
         }
-        
+
         return config;
     },
     (error: AxiosError) => {
@@ -117,35 +117,35 @@ axiosInstance.interceptors.response.use(
     },
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-        
+
         // CORS 에러 감지 (네트워크 에러이면서 response가 없는 경우)
         if (!error.response && error.message === 'Network Error') {
             if (!error.config?.skipLoading) {
                 useLoadingStore.getState().stopLoading();
             }
-            
+
             // CORS 에러로 인한 인증 문제일 가능성이 높음
             useAuthStore.getState().clearAuth();
             useUserStore.getState().clearUser();
-            
+
             // 루트 페이지로 리다이렉트
             if (window.location.pathname !== '/') {
                 toast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
                 window.location.href = '/';
             }
-            
+
             return Promise.reject(error);
         }
-        
+
         // 401 에러이고 아직 재시도하지 않은 경우
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-            
+
             // 로딩 중지
             if (!originalRequest.skipLoading) {
                 useLoadingStore.getState().stopLoading();
             }
-            
+
             try {
                 // 이미 재발급 중이면 기다리고, 아니면 새로 시작
                 if (!reissuePromise) {
@@ -160,32 +160,32 @@ axiosInstance.interceptors.response.use(
                             reissuePromise = null;
                         });
                 }
-                
+
                 // 재발급된 토큰 받기
                 const access_token = await reissuePromise;
-                
+
                 // 원래 요청의 헤더에 새 토큰 적용
                 originalRequest.headers.Authorization = `Bearer ${access_token}`;
-                
+
                 // 원래 요청 재시도
                 return axiosInstance(originalRequest);
             } catch (reissueError) {
                 // 토큰 재발급 실패 시 로그아웃 처리
                 useAuthStore.getState().clearAuth();
                 useUserStore.getState().clearUser();
-                
+
                 // 토스트 메시지 표시
                 toast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
-                
+
                 // 루트 페이지로 리다이렉트
                 if (window.location.pathname !== '/') {
                     window.location.href = '/';
                 }
-                
+
                 return Promise.reject(reissueError);
             }
         }
-        
+
         if (!error.config?.skipLoading) {
             useLoadingStore.getState().stopLoading();
         }

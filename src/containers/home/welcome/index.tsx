@@ -6,6 +6,7 @@ interface WelcomeSectionProps {
     totalCount: number;
 }
 
+
 const supervisionMessageMap: Record<SupervisionTodayType, string> = {
     NONE: '오늘은 감독이 없습니다.',
     SELF_STUDY: '오늘은 자습 감독이 있는 날입니다.',

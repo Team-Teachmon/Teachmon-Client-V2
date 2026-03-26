@@ -74,7 +74,7 @@ export default function AdminAfterSchoolPage() {
 
   const classes = useMemo(() => {
     if (!apiData) return [];
-    
+
     return apiData.map((item): AdminAfterSchoolClass => ({
       id: item.id.toString(),
       grade: selectedGrade,
@@ -126,7 +126,8 @@ export default function AdminAfterSchoolPage() {
   const handleConfirmDelete = async () => {
     if (deleteTargetId) {
       try {
-        await deleteAfterSchoolClass(deleteTargetId);
+        const ids = deleteTargetId.split(',').map(id => id.trim()).filter(Boolean);
+        await Promise.all(ids.map(id => deleteAfterSchoolClass(id)));
         toast.success('방과후가 성공적으로 삭제되었습니다.');
         await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'] });
       } catch {
@@ -138,12 +139,12 @@ export default function AdminAfterSchoolPage() {
   };
 
   const handleAdd = () => {
-    navigate('/admin/after-school/create', { 
-      state: { 
+    navigate('/admin/after-school/create', {
+      state: {
         selectedDay: selectedDay,
         selectedBranch: branch,
         selectedGrade: selectedGrade,
-      } 
+      }
     });
   };
 
@@ -198,7 +199,7 @@ export default function AdminAfterSchoolPage() {
       setIsPdfLoading(false);
     }
   };
-  
+
   const handlePrevDay = () => {
     const currentIndex = WEEKDAYS.indexOf(selectedDay);
     const prevIndex = currentIndex === 0 ? WEEKDAYS.length - 1 : currentIndex - 1;
@@ -279,7 +280,7 @@ export default function AdminAfterSchoolPage() {
               renderActions={renderActions}
               actionsHeader=""
               onRowClick={handleRowClick}
-              />
+            />
           </S.TableWrapper>
 
           <S.AddButtonWrapper>
