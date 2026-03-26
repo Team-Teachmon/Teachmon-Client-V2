@@ -8,7 +8,7 @@ import Button from '@/components/ui/button';
 import { ADMIN_AFTER_SCHOOL_PERIODS } from '@/constants/admin';
 import { searchQuery } from '@/services/search/search.query';
 import { useDebounce } from '@/hooks/useDebounce';
-import { createAfterSchoolClass, updateAfterSchoolClass, getAfterSchoolClasses } from '@/services/after-school/afterSchool.api';
+import { createAfterSchoolClass, updateAfterSchoolClass, getAfterSchoolClasses, deleteAfterSchoolClass } from '@/services/after-school/afterSchool.api';
 import { toast } from 'react-toastify';
 import type { StudentSearchResponse, PlaceSearchResponse, TeacherSearchResponse, TeamSearchResponse } from '@/types/search';
 import type { CreateAfterSchoolRequest, AdminAfterSchoolClass, AfterSchoolResponse } from '@/types/after-school';
@@ -295,6 +295,11 @@ export default function AfterSchoolFormPage() {
             after_school_id: targetAfterSchoolId || afterSchoolId || id as string,
             period: mappedPeriod,
           });
+          if (editData?.period === '8~11교시') {
+            const splittedSchoolId = afterSchoolId.split(',');
+            const deleteId = period === '8~9교시' ? splittedSchoolId[1] : splittedSchoolId[0];
+            await deleteAfterSchoolClass(deleteId);
+          }
         }
 
         toast.success('방과후가 성공적으로 수정되었습니다.');
