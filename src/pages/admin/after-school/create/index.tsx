@@ -305,12 +305,11 @@ export default function AfterSchoolFormPage() {
         toast.success('방과후가 성공적으로 수정되었습니다.');
         // 서버 상태 업데이트
         await queryClient.invalidateQueries({
-          queryKey: ['afterSchool.classes'],
+          queryKey: ['afterSchool'],
           refetchType: 'all'
         });
         // 수정 완료 후 localStorage 정리
         localStorage.removeItem('currentAfterSchoolId');
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'] });
       } else {
         const baseRequest: Omit<CreateAfterSchoolRequest, 'period'> = {
           grade: selectedStudents.length > 0 ? selectedStudents[0].grade : selectedGrade,
@@ -345,6 +344,7 @@ export default function AfterSchoolFormPage() {
         }
 
         toast.success('방과후가 성공적으로 생성되었습니다.');
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool'] });
       }
       navigate(returnPath);
     } catch {
