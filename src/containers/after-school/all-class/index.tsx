@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import * as S from './style';
@@ -8,11 +8,6 @@ import { afterSchoolQuery } from '@/services/after-school/afterSchool.query';
 import AfterSchoolDetailModal from '@/containers/after-school/detail-modal';
 import { API_WEEKDAY_TO_UI } from '@/utils/afterSchool';
 import Dropdown from '@/components/ui/input/dropdown';
-
-interface AllClassSectionProps {
-  selectedGrade: 1 | 2 | 3;
-  onGradeChange: (grade: 1 | 2 | 3) => void;
-}
 
 type Quarter = 1 | 2 | 3 | 4;
 
@@ -24,26 +19,46 @@ const getInitialDay = () => {
   return today - 1;
 };
 
-export default function AllClassSection({
-  selectedGrade,
-  onGradeChange,
-}: AllClassSectionProps) {
+export default function AllClassSection() {
   const navigate = useNavigate();
-  const [selectedDay, setSelectedDay] = useState(getInitialDay());
+
+  const [selectedGrade, setSelectedGrade] = useState<1 | 2 | 3>(() => {
+    const saved = localStorage.getItem('afterSchoolGrade');
+    return saved !== null ? Number(saved) as 1 | 2 | 3 : 1;
+  });
+  const [selectedQuarter, setSelectedQuarter] = useState<Quarter>(() => {
+    const saved = sessionStorage.getItem('afterSchoolQuarter');
+    return saved !== null ? Number(saved) as Quarter : 1;
+  });
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const saved = localStorage.getItem('afterSchoolDay');
+    return saved !== null ? Number(saved) : getInitialDay()
+  });
+  useEffect(() => { localStorage.setItem('afterSchoolGrade', selectedGrade.toString()) }, [selectedGrade]);
+  useEffect(() => { sessionStorage.setItem('afterSchoolQuarter', selectedQuarter.toString()) }, [selectedQuarter]);
+  useEffect(() => { localStorage.setItem('afterSchoolDay', selectedDay.toString()) }, [selectedDay]);
+
   const [timeSlotPages, setTimeSlotPages] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState<AllAfterSchool | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedQuarter, setSelectedQuarter] = useState<Quarter>(1);
 
   const { data: branchInfo } = useQuery(afterSchoolQuery.branch());
 
   const currentBranch = branchInfo?.[0]?.number;
 
-  useEffect(() => {
-    if (branchInfo) {
-      setSelectedQuarter(currentBranch as Quarter);
-    }
-  }, [branchInfo]);
+  const isInitialized = useRef(false);
+
+useEffect(() => {
+  if (!branchInfo || isInitialized.current) return;
+
+  // localStorage 없을 때만 초기화하고 싶으면 이 조건 추가
+  const saved = sessionStorage.getItem('afterSchoolQuarter');
+  if (saved === null) {
+    setSelectedQuarter(currentBranch as Quarter);
+  }
+
+  isInitialized.current = true;
+}, [branchInfo, currentBranch]);
 
   const params: AfterSchoolSearchParams = {
     grade: selectedGrade,
@@ -138,9 +153,9 @@ export default function AllClassSection({
         <S.Title>전체 방과후</S.Title>
         <S.SelectionContainer>
         <S.GradeTabs>
-          <S.GradeTab $active={selectedGrade === 1} onClick={() => onGradeChange(1)}>1학년</S.GradeTab>
-          <S.GradeTab $active={selectedGrade === 2} onClick={() => onGradeChange(2)}>2학년</S.GradeTab>
-          <S.GradeTab $active={selectedGrade === 3} onClick={() => onGradeChange(3)}>3학년</S.GradeTab>
+          <S.GradeTab $active={selectedGrade === 1} onClick={() => setSelectedGrade(1)}>1학년</S.GradeTab>
+          <S.GradeTab $active={selectedGrade === 2} onClick={() => setSelectedGrade(2)}>2학년</S.GradeTab>
+          <S.GradeTab $active={selectedGrade === 3} onClick={() => setSelectedGrade(3)}>3학년</S.GradeTab>
         </S.GradeTabs>
         <Dropdown<Quarter>
           placeholder="분기"
