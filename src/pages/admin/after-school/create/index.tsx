@@ -276,18 +276,47 @@ export default function AfterSchoolFormPage() {
           const eightNineId = ids[0]?.trim() || '';
           const tenElevenId = ids[1]?.trim() || '';
 
-          await Promise.all([
-            updateAfterSchoolClass({
-              ...baseUpdateRequest,
-              after_school_id: eightNineId,
-              period: 'EIGHT_AND_NINE_PERIOD',
-            }),
-            updateAfterSchoolClass({
-              ...baseUpdateRequest,
-              after_school_id: tenElevenId,
-              period: 'TEN_AND_ELEVEN_PERIOD',
-            }),
-          ]);
+          if (editData?.period === '8~9교시') {
+            // 8~9교시 → 8~11교시: 기존 8~9 수정 + 10~11 새로 생성
+            await Promise.all([
+              updateAfterSchoolClass({
+                ...baseUpdateRequest,
+                after_school_id: eightNineId,
+                period: 'EIGHT_AND_NINE_PERIOD',
+              }),
+              createAfterSchoolClass({
+                ...baseUpdateRequest,
+                period: 'TEN_AND_ELEVEN_PERIOD',
+              }),
+            ]);
+          } else if (editData?.period === '10~11교시') {
+            // 10~11교시 → 8~11교시: 8~9 새로 생성 + 기존 10~11 수정
+            await Promise.all([
+              createAfterSchoolClass({
+                ...baseUpdateRequest,
+                period: 'EIGHT_AND_NINE_PERIOD',
+              }),
+              updateAfterSchoolClass({
+                ...baseUpdateRequest,
+                after_school_id: eightNineId,
+                period: 'TEN_AND_ELEVEN_PERIOD',
+              }),
+            ]);
+          } else {
+            // 8~11교시 → 8~11교시: 둘 다 수정
+            await Promise.all([
+              updateAfterSchoolClass({
+                ...baseUpdateRequest,
+                after_school_id: eightNineId,
+                period: 'EIGHT_AND_NINE_PERIOD',
+              }),
+              updateAfterSchoolClass({
+                ...baseUpdateRequest,
+                after_school_id: tenElevenId,
+                period: 'TEN_AND_ELEVEN_PERIOD',
+              }),
+            ]);
+          }
         } else {
           const mappedPeriod = mapSinglePeriod(period);
           await updateAfterSchoolClass({
