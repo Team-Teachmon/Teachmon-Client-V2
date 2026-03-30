@@ -209,17 +209,26 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
                                     onChange={setSelectedDate}
                                 />
                                 <S.DropdownWrapper>
-                                    <Dropdown
-                                        placeholder="시간"
-                                        items={PERIOD_OPTIONS.map(p => p.label)}
-                                        value={PERIOD_OPTIONS.find(p => p.value === selectedPeriod)?.label || ''}
-                                        onChange={(label) => {
-                                            const period = PERIOD_OPTIONS.find(p => p.label === label);
-                                            if (period) setSelectedPeriod(period.value);
-                                        }}
-                                        customHeight="44px"
-                                        customBorderRadius="8px"
-                                    />
+                                    {(() => {
+                                        // 이석 수정 상태(initialData 존재)일 때는 8~11교시 컬럼 제외
+                                        const filteredPeriodOptions = initialData
+                                            ? PERIOD_OPTIONS.filter(p => p.value === 'EIGHT_AND_NINE_PERIOD' || p.value === 'TEN_AND_ELEVEN_PERIOD')
+                                            : PERIOD_OPTIONS;
+                                        
+                                        return (
+                                            <Dropdown
+                                                placeholder="시간"
+                                                items={filteredPeriodOptions.map(p => p.label)}
+                                                value={filteredPeriodOptions.find(p => p.value === selectedPeriod)?.label || ''}
+                                                onChange={(label) => {
+                                                    const period = filteredPeriodOptions.find(p => p.label === label);
+                                                    if (period) setSelectedPeriod(period.value);
+                                                }}
+                                                customHeight="44px"
+                                                customBorderRadius="8px"
+                                            />
+                                        );
+                                    })()}
                                 </S.DropdownWrapper>
                             </S.InputRow>
                         </S.FormGroup>
