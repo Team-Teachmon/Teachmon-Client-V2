@@ -274,7 +274,7 @@ export default function AfterSchoolFormPage() {
           // ID가 콤마로 구분되어 있는 경우 분리 (예: "61853594277646336,61853594277646337")
           const ids = (afterSchoolId || id || '').split(',');
           const eightNineId = ids[0]?.trim() || '';
-          const tenElevenId = ids[1]?.trim() || '';
+          // const tenElevenId = ids[1]?.trim() || '';
 
           if (editData?.period === '8~9교시') {
             // 8~9교시 → 8~11교시: 기존 8~9 수정 + 10~11 새로 생성
@@ -307,13 +307,8 @@ export default function AfterSchoolFormPage() {
             await Promise.all([
               updateAfterSchoolClass({
                 ...baseUpdateRequest,
-                after_school_id: eightNineId,
-                period: 'EIGHT_AND_NINE_PERIOD',
-              }),
-              updateAfterSchoolClass({
-                ...baseUpdateRequest,
-                after_school_id: tenElevenId,
-                period: 'TEN_AND_ELEVEN_PERIOD',
+                after_school_id: afterSchoolId,
+                period: 'EIGHT_AND_ELEVEN_PERIOD',
               }),
             ]);
           }
