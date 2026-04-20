@@ -368,10 +368,12 @@ export default function AfterSchoolFormPage() {
         }
 
         toast.success('방과후가 성공적으로 생성되었습니다.');
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' }),
+        ]);
       }
       navigate(returnPath);
     } catch {
