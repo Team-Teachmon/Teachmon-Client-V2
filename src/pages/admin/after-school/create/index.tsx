@@ -308,7 +308,7 @@ export default function AfterSchoolFormPage() {
               updateAfterSchoolClass({
                 ...baseUpdateRequest,
                 after_school_id: afterSchoolId,
-                period: 'EIGHT_AND_ELEVEN_PERIOD',
+                period: 'EIGHT_TO_ELEVEN_PERIOD',
               }),
             ]);
           }
