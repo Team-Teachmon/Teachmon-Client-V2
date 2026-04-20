@@ -328,12 +328,10 @@ export default function AfterSchoolFormPage() {
 
         toast.success('방과후가 성공적으로 수정되었습니다.');
         // 서버 상태 업데이트
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' }),
-        ]);
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' });
         // 수정 완료 후 localStorage 정리
         localStorage.removeItem('currentAfterSchoolId');
       } else {
@@ -370,12 +368,10 @@ export default function AfterSchoolFormPage() {
         }
 
         toast.success('방과후가 성공적으로 생성되었습니다.');
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' }),
-          queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' }),
-        ]);
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' });
+        await queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' });
       }
       navigate(returnPath);
     } catch {
