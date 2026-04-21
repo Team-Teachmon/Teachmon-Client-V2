@@ -304,13 +304,11 @@ export default function AfterSchoolFormPage() {
             ]);
           } else {
             // 8~11교시 → 8~11교시: 둘 다 수정
-            await Promise.all([
-              updateAfterSchoolClass({
-                ...baseUpdateRequest,
-                after_school_id: afterSchoolId,
-                period: 'EIGHT_TO_ELEVEN_PERIOD',
-              }),
-            ]);
+            await updateAfterSchoolClass({
+              ...baseUpdateRequest,
+              after_school_id: afterSchoolId,
+              period: 'EIGHT_TO_ELEVEN_PERIOD',
+            });
           }
         } else {
           const mappedPeriod = mapSinglePeriod(period);
@@ -328,10 +326,12 @@ export default function AfterSchoolFormPage() {
 
         toast.success('방과후가 성공적으로 수정되었습니다.');
         // 서버 상태 업데이트
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' });
-        await queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.classes'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.myToday'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.my'], refetchType: 'all' }),
+          queryClient.invalidateQueries({ queryKey: ['afterSchool.all'], refetchType: 'all' }),
+        ]);
         // 수정 완료 후 localStorage 정리
         localStorage.removeItem('currentAfterSchoolId');
       } else {
