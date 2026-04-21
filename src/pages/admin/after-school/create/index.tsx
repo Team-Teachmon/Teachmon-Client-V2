@@ -304,13 +304,11 @@ export default function AfterSchoolFormPage() {
             ]);
           } else {
             // 8~11교시 → 8~11교시: 둘 다 수정
-            await Promise.all([
-              updateAfterSchoolClass({
-                ...baseUpdateRequest,
-                after_school_id: afterSchoolId,
-                period: 'EIGHT_AND_ELEVEN_PERIOD',
-              }),
-            ]);
+            await updateAfterSchoolClass({
+              ...baseUpdateRequest,
+              after_school_id: afterSchoolId,
+              period: 'EIGHT_TO_ELEVEN_PERIOD',
+            });
           }
         } else {
           const mappedPeriod = mapSinglePeriod(period);
