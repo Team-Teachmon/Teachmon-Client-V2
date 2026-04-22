@@ -356,7 +356,8 @@ export default function Calendar({
                                   {seventhEvent.label}
                                 </S.MobileThirdTag>
                               ) : (
-                                <S.MobileThirdPlaceholder />
+                                // <S.MobileThirdPlaceholder />
+                                <></>
                               )}
 
                               {selfStudyEvent ? (
