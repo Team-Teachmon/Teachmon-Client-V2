@@ -12,6 +12,8 @@ export const Container = styled.div`
   ${mq.mobile} {
     padding: 12px;
     gap: 8px;
+    overflow-y: auto;
+    height: calc(100% - 5rem);
   }
 `;
 
