@@ -21,12 +21,9 @@ export default function Button({ text, onClick, variant, width, isLoading = fals
       onClick={handleClick}
       $variant={variant}
       $width={width}
-      $disabled={isLoading}
-      disabled={isLoading}
-      style={{ cursor: isLoading ? 'not-allowed' : 'pointer' }}
     >
       <S.Name>
-        {isLoading ? '로딩 중...' : text}
+        {text}
       </S.Name>
     </S.Container>
   );

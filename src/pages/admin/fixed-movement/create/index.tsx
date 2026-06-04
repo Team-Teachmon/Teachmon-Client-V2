@@ -24,6 +24,7 @@ export default function FixedMovementFormPage() {
   const queryClient = useQueryClient();
   const isProcessingTeam = useRef(false);
   const isProcessingStudent = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: detailData } = useQuery(fixedMovementQuery.detail(id));
   
@@ -205,6 +206,8 @@ export default function FixedMovementFormPage() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     const weekDay = WEEKDAY_LABEL_TO_API[dayOfWeek];
     const periodEnum = PERIOD_LABEL_TO_API[period];
 
@@ -219,6 +222,7 @@ export default function FixedMovementFormPage() {
     }
 
     try {
+      setIsSubmitting(true);
       if (isEditMode && id) {
         updateMutation.mutate({
           id,
@@ -229,6 +233,8 @@ export default function FixedMovementFormPage() {
             cause: reason,
             students: selectedStudents.map((s) => String(s.id ?? s.studentNumber)),
           },
+        }, {
+          onSettled: () => setIsSubmitting(false)
         });
         return;
       }
@@ -265,6 +271,7 @@ export default function FixedMovementFormPage() {
       navigate('/admin/fixed-movement');
     } catch (e) {
       toast.error('고정 이석 생성에 실패했습니다.');
+      setIsSubmitting(false);
     }
   };
 
@@ -452,7 +459,7 @@ export default function FixedMovementFormPage() {
 
       <S.ButtonRow>
         <Button text="취소" variant="cancel" width='27rem' onClick={handleCancel} />
-        <Button text="완료" variant="confirm" width='27rem' onClick={handleSubmit} />
+        <Button text="완료" variant="confirm" width='27rem' onClick={handleSubmit} isLoading={isSubmitting} />
       </S.ButtonRow>
     </S.Container>
   );

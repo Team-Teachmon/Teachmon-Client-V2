@@ -10,6 +10,7 @@ interface ConfirmModalProps {
     message: string | React.ReactNode
     cancelText?: string
     confirmText?: string
+    isLoading?: boolean
 }
 
 export default function ConfirmModal({
@@ -19,7 +20,8 @@ export default function ConfirmModal({
     title,
     message,
     cancelText = "취소",
-    confirmText = "확인"
+    confirmText = "확인",
+    isLoading = false
 }: ConfirmModalProps) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} padding="2.5rem">
@@ -28,7 +30,7 @@ export default function ConfirmModal({
                 <S.Message>{message}</S.Message>
                 <S.ButtonGroup>
                     <Button variant="cancel" text={cancelText} onClick={onClose} />
-                    <Button variant="confirm" text={confirmText} onClick={onConfirm} />
+                    <Button variant="confirm" text={confirmText} onClick={onConfirm} isLoading={isLoading} />
                 </S.ButtonGroup>
             </S.Container>
         </Modal>
