@@ -30,6 +30,7 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
     const [selectedFloor, setSelectedFloor] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedPlace, setHighlightedPlace] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
         placeName: string;
@@ -73,6 +74,9 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
     };
 
     const handleLocationClick = async (placeName: string) => {
+        // 이미 제출 중이면 무시
+        if (isSubmitting) return;
+
         // 이미 이석이 있는 장소인 경우 확인 모달 표시
         if (occupiedPlaces.has(placeName)) {
             const occupiedSeats = leaveSeatList.filter(seat => seat.place === placeName);
@@ -89,12 +93,14 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
         
         if (placeName && placeName !== '' && placeName !== 'X') {
             try {
+                setIsSubmitting(true);
                 // 장소 검색 API로 실제 place_id 획득
                 const places = await searchPlaces(placeName, true);
                 const place = places.find(p => p.name === placeName);
                 
                 if (!place) {
                     toast.error('장소를 찾을 수 없습니다.');
+                    setIsSubmitting(false);
                     return;
                 }
                 
@@ -136,21 +142,26 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
                 navigate('/manage/record');
             } catch (error) {
                 console.error(error);
+                setIsSubmitting(false);
             }
         }
     };
 
     const handleConfirmOccupiedPlace = async () => {
+        if (isSubmitting) return;
+
         const placeName = confirmModal.placeName;
         setConfirmModal({ isOpen: false, placeName: '', students: [] });
         
         try {
+            setIsSubmitting(true);
             // 장소 검색 API로 실제 place_id 획득
             const places = await searchPlaces(placeName, true);
             const place = places.find(p => p.name === placeName);
             
             if (!place) {
                 toast.error('장소를 찾을 수 없습니다.');
+                setIsSubmitting(false);
                 return;
             }
             
@@ -192,6 +203,7 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
             navigate('/manage/record');
         } catch (error) {
             console.error(error);
+            setIsSubmitting(false);
         }
     };
 
@@ -324,6 +336,7 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
                 onClose={() => setConfirmModal({ isOpen: false, placeName: '', students: [] })}
                 onConfirm={handleConfirmOccupiedPlace}
                 title="이미 이석이 등록된 장소입니다"
+                isLoading={isSubmitting}
                 message={
                     <div>
                         <div style={{ marginBottom: '12px' }}>
