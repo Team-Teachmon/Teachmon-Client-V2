@@ -155,14 +155,18 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
         setConfirmModal({ isOpen: false, placeName: '', students: [] });
 
         // 이미 이 장소에 등록된 학생은 제외하고 등록 (같은 학생 중복 등록 방지)
+        // 표시 문자열의 공백 유무 등 포맷 차이가 있을 수 있어 학번(숫자)만 추출해 비교한다
+        const extractStudentNumber = (text: string) => text.match(/^\d+/)?.[0] ?? text;
+        const registeredNumbers = new Set(alreadyRegistered.map(extractStudentNumber));
+
         const studentDetails = formData.studentDetails;
         let submitData = formData;
 
         if (studentDetails) {
             const duplicateNames = studentDetails
-                .filter(s => alreadyRegistered.includes(s.display))
+                .filter(s => registeredNumbers.has(extractStudentNumber(s.display)))
                 .map(s => s.display);
-            const uniqueStudentDetails = studentDetails.filter(s => !alreadyRegistered.includes(s.display));
+            const uniqueStudentDetails = studentDetails.filter(s => !registeredNumbers.has(extractStudentNumber(s.display)));
 
             if (duplicateNames.length > 0) {
                 if (uniqueStudentDetails.length === 0) {
