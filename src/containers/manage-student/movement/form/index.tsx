@@ -35,12 +35,14 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
     const [studentSearch, setStudentSearch] = useState<string>('');
     const [isTeamMode, setIsTeamMode] = useState(false);
     const [selectedStudents, setSelectedStudents] = useState<Array<{ id: string; display: string }>>(
-        savedFormData?.studentDetails ||
-        (initialData ? dedupeStudentsById(initialData.students.map(student => ({
-            id: String(student.id),
-            display: `${student.number} ${student.name}`,
-        }))) : undefined) ||
-        (prefilledStudent ? [prefilledStudent] : [])
+        dedupeStudentsById(
+            savedFormData?.studentDetails ||
+            (initialData ? initialData.students.map(student => ({
+                id: String(student.id),
+                display: `${student.number} ${student.name}`,
+            })) : undefined) ||
+            (prefilledStudent ? [prefilledStudent] : [])
+        )
     );
 
     // initialData가 바뀌면 폼 상태를 업데이트 (savedFormData가 없을 때만)
