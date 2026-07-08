@@ -15,6 +15,10 @@ import { getTodayDate } from '@/utils/period';
 import { formatStudent } from '@/utils/format';
 
 
+function dedupeStudentsById<T extends { id: string }>(students: T[]): T[] {
+    return Array.from(new Map(students.map(student => [student.id, student])).values());
+}
+
 interface MovementFormProps {
     onNext: (data: MovementFormData) => void;
     onCancel: () => void;
@@ -32,10 +36,10 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
     const [isTeamMode, setIsTeamMode] = useState(false);
     const [selectedStudents, setSelectedStudents] = useState<Array<{ id: string; display: string }>>(
         savedFormData?.studentDetails ||
-        initialData?.students.map(student => ({
+        (initialData ? dedupeStudentsById(initialData.students.map(student => ({
             id: String(student.id),
             display: `${student.number} ${student.name}`,
-        })) ||
+        }))) : undefined) ||
         (prefilledStudent ? [prefilledStudent] : [])
     );
 
@@ -47,10 +51,10 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
             setSelectedPeriod(initialData.period || '');
             setReason(initialData.cause || '');
             setSelectedStudents(
-                initialData.students.map(student => ({
+                dedupeStudentsById(initialData.students.map(student => ({
                     id: String(student.id),
                     display: `${student.number} ${student.name}`,
-                }))
+                })))
             );
         }
     }, [initialData]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,12 +157,14 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
             return;
         }
 
+        const uniqueSelectedStudents = dedupeStudentsById(selectedStudents);
+
         onNext({
             day: selectedDate,
             period: selectedPeriod,
             cause: reason,
-            students: selectedStudents.map(s => String(s.id)),
-            studentDetails: selectedStudents,
+            students: uniqueSelectedStudents.map(s => String(s.id)),
+            studentDetails: uniqueSelectedStudents,
         });
     };
 

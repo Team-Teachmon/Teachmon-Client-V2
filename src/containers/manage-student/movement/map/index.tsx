@@ -151,30 +151,56 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
         if (isSubmitting) return;
 
         const placeName = confirmModal.placeName;
+        const alreadyRegistered = confirmModal.students;
         setConfirmModal({ isOpen: false, placeName: '', students: [] });
-        
+
+        // 이미 이 장소에 등록된 학생은 제외하고 등록 (같은 학생 중복 등록 방지)
+        const studentDetails = formData.studentDetails;
+        let submitData = formData;
+
+        if (studentDetails) {
+            const duplicateNames = studentDetails
+                .filter(s => alreadyRegistered.includes(s.display))
+                .map(s => s.display);
+            const uniqueStudentDetails = studentDetails.filter(s => !alreadyRegistered.includes(s.display));
+
+            if (duplicateNames.length > 0) {
+                if (uniqueStudentDetails.length === 0) {
+                    toast.error('선택한 학생이 이미 모두 이 장소에 등록되어 있습니다.');
+                    return;
+                }
+                toast.warning(`이미 등록된 학생은 제외하고 등록합니다: ${duplicateNames.join(', ')}`);
+            }
+
+            submitData = {
+                ...formData,
+                students: uniqueStudentDetails.map(s => s.id),
+                studentDetails: uniqueStudentDetails,
+            };
+        }
+
         try {
             setIsSubmitting(true);
             // 장소 검색 API로 실제 place_id 획득
             const places = await searchPlaces(placeName, true);
             const place = places.find(p => p.name === placeName);
-            
+
             if (!place) {
                 toast.error('장소를 찾을 수 없습니다.');
                 setIsSubmitting(false);
                 return;
             }
-            
+
             if (isEditMode && editId) {
                 // 수정 모드: 모든 필드 전송
                 await updateLeaveSeat({
                     leaveseatId: editId,
                     data: {
-                        day: formData.day,
-                        period: formData.period,
+                        day: submitData.day,
+                        period: submitData.period,
                         place: place.id,
-                        cause: formData.cause,
-                        students: formData.students,
+                        cause: submitData.cause,
+                        students: submitData.students,
                     }
                 });
                 toast.success('이석이 수정되었습니다.');
@@ -183,18 +209,18 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
                 if (isFullPeriod) {
                     // 8~11교시: 8~9교시, 10~11교시 두 번 생성
                     await createLeaveSeat({
-                        ...formData,
+                        ...submitData,
                         period: 'EIGHT_AND_NINE_PERIOD',
                         place_id: place.id,
                     });
                     await createLeaveSeat({
-                        ...formData,
+                        ...submitData,
                         period: 'TEN_AND_ELEVEN_PERIOD',
                         place_id: place.id,
                     });
                 } else {
                     await createLeaveSeat({
-                        ...formData,
+                        ...submitData,
                         place_id: place.id,
                     });
                 }

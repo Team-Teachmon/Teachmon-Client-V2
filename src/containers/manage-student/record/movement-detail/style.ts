@@ -2,14 +2,7 @@ import styled from '@emotion/styled';
 import { colors } from '@/styles/theme';
 import { mq } from '@/styles/media';
 
-export const Container = styled.div`
-    max-height: 90vh;
-    overflow-y: auto;
-
-    ${mq.mobile} {
-        max-height: 70vh;
-    }
-`;
+export const Container = styled.div``;
 
 export const Header = styled.div`
     display: flex;
