@@ -59,8 +59,11 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
         enabled: debouncedSearchQuery.length > 0,
     });
     
-    // 이석이 있는 장소 목록
-    const occupiedPlaces = new Set(leaveSeatList.map(seat => seat.place));
+    // 이석이 있는 장소 목록 (수정 모드에서는 지금 수정 중인 기록 자신은 제외)
+    const otherLeaveSeatList = isEditMode && editId
+        ? leaveSeatList.filter(seat => String(seat.leaveseat_id) !== editId)
+        : leaveSeatList;
+    const occupiedPlaces = new Set(otherLeaveSeatList.map(seat => seat.place));
 
     const handleSelectPlace = (place: { name: string; floor: number }) => {
         setSelectedFloor(place.floor);
@@ -79,7 +82,7 @@ export default function MovementMap({ onBack, formData }: MovementMapProps) {
 
         // 이미 이석이 있는 장소인 경우 확인 모달 표시
         if (occupiedPlaces.has(placeName)) {
-            const occupiedSeats = leaveSeatList.filter(seat => seat.place === placeName);
+            const occupiedSeats = otherLeaveSeatList.filter(seat => seat.place === placeName);
             const studentNames = occupiedSeats.flatMap(seat => seat.students);
             const uniqueStudentNames = [...new Set(studentNames)]; // 중복 제거
             
