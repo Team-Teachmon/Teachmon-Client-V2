@@ -7,6 +7,7 @@ import * as S from './style';
 import { useBusinessTripMutation } from '@/services/after-school/afterSchool.mutation';
 import type { MyAfterSchool } from '@/types/after-school';
 import type { CalendarEvent } from '@/types/calendar';
+import { getCalendarRange } from '@/utils/calendar';
 
 export default function BusinessTripPage() {
   const navigate = useNavigate();
@@ -35,13 +36,13 @@ export default function BusinessTripPage() {
     if (!targetDay) return [];
     
     const events: CalendarEvent[] = [];
-    const firstDay = new Date(selectedYear, selectedMonth - 1, 1);
-    const lastDay = new Date(selectedYear, selectedMonth, 0);
+    // 지정된 달이 아니라 달력에 표시되는 날짜 범위를 기준으로 생성
+    const { start, end } = getCalendarRange(selectedYear, selectedMonth);
     
-    for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
+    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
       if (date.getDay() === targetDay) {
         events.push({
-          id: `event-${date.getDate()}`,
+          id: `event-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
           date: new Date(date),
           label: classData.name,
           bgColor: 'rgba(0, 133, 255, 0.1)',

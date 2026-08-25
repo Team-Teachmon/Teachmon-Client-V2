@@ -10,6 +10,7 @@ import type { SelfStudySchedule, Grade } from '@/types/selfStudy';
 import { selfStudyQuery } from '@/services/admin/selfStudy/adminSelfStudy.query';
 import { createAdditionalSelfStudy, deleteAdditionalSelfStudy } from '@/services/admin/selfStudy/adminSelfStudy.api';
 import { getDatesInRange, getGradeColor, formatGrade, formatPeriods, PERIOD_ENUM_TO_LABEL, PERIOD_LABEL_TO_ENUM } from '@/utils/selfStudy';
+import { getCalendarRange } from '@/utils/calendar';
 import SidePanel from './side-panel';
 import DetailModal from './detail-modal';
 import * as S from './style';
@@ -26,7 +27,23 @@ export default function DailySection() {
   const [selectedSchedule, setSelectedSchedule] = useState<SelfStudySchedule | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { data: rawData, isLoading } = useQuery(selfStudyQuery.additional(selectedYear));
+  // 지정된 달이 아니라 달력에 표시되는 날짜 범위를 기준으로 조회 (연말/연초에는 두 해에 걸친다)
+  const visibleYears = useMemo(() => {
+    const { start, end } = getCalendarRange(selectedYear, selectedMonth);
+    return Array.from(new Set([start.getFullYear(), end.getFullYear()]));
+  }, [selectedYear, selectedMonth]);
+
+  const firstYearQuery = useQuery(selfStudyQuery.additional(visibleYears[0]));
+  const secondYearQuery = useQuery(selfStudyQuery.additional(visibleYears[1] ?? visibleYears[0]));
+
+  const rawData = useMemo(
+    () =>
+      visibleYears.length > 1
+        ? [...(firstYearQuery.data ?? []), ...(secondYearQuery.data ?? [])]
+        : firstYearQuery.data,
+    [firstYearQuery.data, secondYearQuery.data, visibleYears],
+  );
+  const isLoading = firstYearQuery.isLoading || (visibleYears.length > 1 && secondYearQuery.isLoading);
   const queryClient = useQueryClient();
 
   const schedules: SelfStudySchedule[] = useMemo(() => {
@@ -204,7 +221,9 @@ export default function DailySection() {
     Promise.all(promises)
       .then(() => {
         toast.success('일별 자습을 추가 설정하였습니다.');
-        queryClient.invalidateQueries({ queryKey: ['selfStudy.additional', selectedYear] });
+        visibleYears.forEach((year) =>
+          queryClient.invalidateQueries({ queryKey: ['selfStudy.additional', year] }),
+        );
         setStartDate(null);
         setEndDate(null);
         setSelectedPeriods([]);
@@ -240,7 +259,9 @@ export default function DailySection() {
     Promise.all(deleteIds.map((pid) => deleteAdditionalSelfStudy(pid)))
       .then(() => {
         toast.success('일별 자습을 삭제하였습니다.');
-        queryClient.invalidateQueries({ queryKey: ['selfStudy.additional', selectedYear] });
+        visibleYears.forEach((year) =>
+          queryClient.invalidateQueries({ queryKey: ['selfStudy.additional', year] }),
+        );
       })
       .catch(() => {
         toast.error('일별 자습 삭제에 실패했습니다.');
