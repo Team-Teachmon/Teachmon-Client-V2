@@ -186,7 +186,6 @@ export default function Calendar({
               return (
                 <S.DayCell
                   key={index}
-                  isCurrentMonth={isCurrentMonth}
                   isSelected={isInDragRange}
                   isInteractive={isInteractive}
                   onMouseDown={() => handleMouseDown(date)}
@@ -203,7 +202,7 @@ export default function Calendar({
                     }
                   }}
                 >
-                  <S.DayNumber dayType={dayType} isCurrentMonth={isCurrentMonth}>{date.getDate()}</S.DayNumber>
+                  <S.DayNumber dayType={dayType}>{date.getDate()}</S.DayNumber>
                   <S.EventList>
                     {(() => {
                       const seventhEvent = dayEvents.find((event) => event.supervisionType === 'seventh_period')

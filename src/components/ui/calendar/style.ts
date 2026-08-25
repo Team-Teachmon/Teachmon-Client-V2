@@ -289,14 +289,13 @@ export const DaysGrid = styled.div`
   }
 `
 
-export const DayCell = styled.div<{ isCurrentMonth: boolean; isSelected?: boolean; isInteractive?: boolean }>`
+export const DayCell = styled.div<{ isSelected?: boolean; isInteractive?: boolean }>`
   display: flex;
   flex-direction: column;
   width: calc(100% / 7);
   height: var(--calendar-row-height);
   padding: 10px;
-  background: ${({ isCurrentMonth, isSelected }) =>
-    isSelected ? 'rgba(0, 133, 255, 0.1)' : isCurrentMonth ? colors.background : '#F8F8F8'};
+  background: ${({ isSelected }) => (isSelected ? 'rgba(0, 133, 255, 0.1)' : colors.background)};
   border: 1px solid #E8E8E8;
   cursor: ${({ isInteractive }) => (isInteractive ? 'pointer' : 'default')};
   transition: background 0.15s;
@@ -304,11 +303,11 @@ export const DayCell = styled.div<{ isCurrentMonth: boolean; isSelected?: boolea
   z-index: 1;
 
   &:hover {
-    background: ${({ isCurrentMonth, isSelected, isInteractive }) => {
+    background: ${({ isSelected, isInteractive }) => {
     if (!isInteractive) {
-      return isSelected ? 'rgba(0, 133, 255, 0.1)' : isCurrentMonth ? colors.background : '#F8F8F8'
+      return isSelected ? 'rgba(0, 133, 255, 0.1)' : colors.background
     }
-    return isSelected ? 'rgba(0, 133, 255, 0.15)' : isCurrentMonth ? '#FAFAFA' : '#F0F0F0'
+    return isSelected ? 'rgba(0, 133, 255, 0.15)' : '#FAFAFA'
   }};
   }
 
@@ -319,15 +318,12 @@ export const DayCell = styled.div<{ isCurrentMonth: boolean; isSelected?: boolea
 
 export const DayNumber = styled.span<{
   dayType: 'sunday' | 'saturday' | 'weekday'
-  isCurrentMonth: boolean
 }>`
   font-family: 'Paperlogy', sans-serif;
   font-weight: 500;
   font-size: 18px;
-  opacity: ${({ isCurrentMonth }) => (isCurrentMonth ? 1 : 0.4)};
 
-  color: ${({ dayType, isCurrentMonth }) => {
-    if (!isCurrentMonth) return '#000000'
+  color: ${({ dayType }) => {
     switch (dayType) {
       case 'sunday':
         return '#FF5656'
