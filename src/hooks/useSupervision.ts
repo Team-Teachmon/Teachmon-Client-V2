@@ -3,10 +3,10 @@ import JSONbig from 'json-bigint';
 import { useSearchParams } from 'react-router-dom';
 import type { CalendarEvent } from '@/types/calendar';
 import type { ExchangeRequest } from '@/types/home';
-import { convertToCalendarEvents } from '@/utils/supervision';
 import { useUserStore } from '@/stores/useUserStore';
 import { useSupervisionSearchQuery } from '@/services/supervision/supervision.query';
 import { useRequestSupervisionExchangeMutation } from '@/services/supervision/supervision.mutation';
+import { useSupervisionCalendarEvents } from './useSupervisionCalendarEvents';
 
 const JSONbigNative = JSONbig({ useNativeBigInt: false, storeAsString: true });
 
@@ -30,13 +30,10 @@ export const useSupervision = () => {
     // BigInt 값이므로 string으로 유지
     const currentTeacherId = user?.id ? String(user.id) : null;
 
-    const { data: supervisionDays } = useSupervisionSearchQuery(month, queryParam);
     const { mutate: requestExchange } = useRequestSupervisionExchangeMutation();
 
-    const baseEvents = useMemo(
-        () => convertToCalendarEvents(supervisionDays ?? []),
-        [supervisionDays]
-    );
+    // 지정된 달이 아니라 달력에 표시되는 날짜 범위를 기준으로 조회
+    const baseEvents = useSupervisionCalendarEvents(useSupervisionSearchQuery, year, month, queryParam);
 
     const events = useMemo(() => {
         let filtered = baseEvents;

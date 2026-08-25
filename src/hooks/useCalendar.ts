@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
-import { startOfDay, endOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addDays, subDays, getDay, isSameDay, isWithinInterval, format } from 'date-fns'
+import { startOfDay, endOfDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isWithinInterval, format } from 'date-fns'
 import type { CalendarDay, CalendarEvent, CalendarRangeEvent, RangeEventRow } from '@/types/calendar'
+import { getCalendarRange } from '@/utils/calendar'
 
 const getDateKey = (d: Date) => format(d, 'yyyy-MM-dd')
 
@@ -28,9 +29,8 @@ export function useCalendar({ controlledYear, controlledMonth, onMonthChange, ev
   const calendarDays = useMemo<CalendarDay[]>(() => {
     const monthStart = startOfMonth(new Date(year, month - 1))
     const monthEnd = endOfMonth(monthStart)
-    const startDayOfWeek = getDay(monthStart)
-    const calendarStart = subDays(monthStart, startDayOfWeek)
-    const days = eachDayOfInterval({ start: calendarStart, end: addDays(calendarStart, 34) })
+    const { start, end } = getCalendarRange(year, month)
+    const days = eachDayOfInterval({ start, end })
     return days.map(date => ({ date, isCurrentMonth: date >= monthStart && date <= monthEnd }))
   }, [year, month])
 

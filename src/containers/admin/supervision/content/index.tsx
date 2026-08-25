@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { eachDayOfInterval } from 'date-fns';
 import Calendar from '@/components/ui/calendar';
 import Button from '@/components/ui/button';
 import Dropdown from '@/components/ui/input/dropdown';
@@ -7,9 +8,10 @@ import TextInput from '@/components/ui/input/text-input';
 import type { CalendarEvent, DayInfo } from '@/types/calendar';
 import type { SupervisionCount } from '@/types/admin';
 import { SUPERVISION_LABEL_TO_TYPE, SUPERVISION_TYPE_LABELS, SUPERVISION_TYPE_STYLES, type AdminSupervisionType } from '@/constants/adminSupervision';
-import { convertToCalendarEvents } from '@/utils/supervision';
 import { getApiErrorMessage } from '@/utils/error';
+import { getCalendarRange } from '@/utils/calendar';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useSupervisionCalendarEvents } from '@/hooks/useSupervisionCalendarEvents';
 import { useAdminSupervisionQuery, useSupervisionRankQuery, useTeacherSearchQuery } from '@/services/admin/supervision/adminSupervision.query';
 import {
   useCreateSupervisionScheduleMutation,
@@ -51,48 +53,54 @@ const formatDay = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const getMonthKey = (year: number, month: number): string => `${year}-${String(month).padStart(2, '0')}`;
+type Assignment = {
+  selfStudyTeacherId: number | null;
+  leaveSeatTeacherId: number | null;
+  seventhPeriodTeacherId: number | null;
+};
 
-const isSameTeacherAssignment = (
-  a: { selfStudyTeacherId: number | null; leaveSeatTeacherId: number | null; seventhPeriodTeacherId: number | null },
-  b: { selfStudyTeacherId: number | null; leaveSeatTeacherId: number | null; seventhPeriodTeacherId: number | null },
-) =>
+const EMPTY_ASSIGNMENT: Assignment = {
+  selfStudyTeacherId: null,
+  leaveSeatTeacherId: null,
+  seventhPeriodTeacherId: null,
+};
+
+const groupEventsByDay = (events: CalendarEvent[]): Record<string, CalendarEvent[]> => {
+  const grouped: Record<string, CalendarEvent[]> = {};
+  events.forEach((event) => {
+    const day = formatDay(event.date);
+    grouped[day] = [...(grouped[day] ?? []), event];
+  });
+  return grouped;
+};
+
+const isSameTeacherAssignment = (a: Assignment, b: Assignment) =>
   a.selfStudyTeacherId === b.selfStudyTeacherId &&
   a.leaveSeatTeacherId === b.leaveSeatTeacherId &&
   a.seventhPeriodTeacherId === b.seventhPeriodTeacherId;
 
-const hasAnyAssignment = (assignment: {
-  selfStudyTeacherId: number | null;
-  leaveSeatTeacherId: number | null;
-  seventhPeriodTeacherId: number | null;
-}) =>
+const hasAnyAssignment = (assignment: Assignment) =>
   assignment.selfStudyTeacherId !== null ||
   assignment.leaveSeatTeacherId !== null ||
   assignment.seventhPeriodTeacherId !== null;
 
-const getAssignmentsFromEvents = (events: CalendarEvent[]) => {
-  const assignments = new Map<
-    string,
-    { selfStudyTeacherId: number | null; leaveSeatTeacherId: number | null; seventhPeriodTeacherId: number | null }
-  >();
+const getAssignmentForDay = (events: CalendarEvent[]): Assignment => {
+  const assignment: Assignment = { ...EMPTY_ASSIGNMENT };
 
   events.forEach((event) => {
     const type = getEventType(event);
     if (!type) return;
-    const day = formatDay(event.date);
-    const current = assignments.get(day) ?? { selfStudyTeacherId: null, leaveSeatTeacherId: null, seventhPeriodTeacherId: null };
     const teacherId = event.teacherId ?? null;
     if (type === 'self_study') {
-      current.selfStudyTeacherId = teacherId;
+      assignment.selfStudyTeacherId = teacherId;
     } else if (type === 'leave_seat') {
-      current.leaveSeatTeacherId = teacherId;
+      assignment.leaveSeatTeacherId = teacherId;
     } else {
-      current.seventhPeriodTeacherId = teacherId;
+      assignment.seventhPeriodTeacherId = teacherId;
     }
-    assignments.set(day, current);
   });
 
-  return assignments;
+  return assignment;
 };
 
 const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminSupervisionContentProps>(function AdminSupervisionContent(
@@ -116,14 +124,13 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
   const debouncedTeacherSearchQuery = useDebounce(teacherSearchQuery, 300);
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [draftEventsByMonth, setDraftEventsByMonth] = useState<Record<string, CalendarEvent[]>>({});
-  const [baseEventsByMonth, setBaseEventsByMonth] = useState<Record<string, CalendarEvent[]>>({});
+  const [draftEventsByDay, setDraftEventsByDay] = useState<Record<string, CalendarEvent[]>>({});
+  const [baseEventsByDay, setBaseEventsByDay] = useState<Record<string, CalendarEvent[]>>({});
 
   const calendarWrapperRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const isEditMode = viewMode === 'edit';
 
-  const { data: supervisionDays } = useAdminSupervisionQuery(month, '');
   const { data: supervisionRanks, refetch: refetchSupervisionRanks } = useSupervisionRankQuery(
     debouncedRankQuery,
     sortOrder,
@@ -137,28 +144,34 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
   const updateScheduleMutation = useUpdateSupervisionScheduleMutation();
   const deleteScheduleMutation = useDeleteSupervisionScheduleMutation();
 
-  const currentMonthKey = useMemo(() => getMonthKey(year, month), [year, month]);
+  // 지정된 달이 아니라 달력에 표시되는 날짜 범위를 기준으로 조회
+  const baseEvents = useSupervisionCalendarEvents(useAdminSupervisionQuery, year, month, '');
 
-  const baseEvents = useMemo(
-    () => convertToCalendarEvents(supervisionDays ?? []),
-    [supervisionDays]
-  );
+  const visibleDays = useMemo(() => {
+    const { start, end } = getCalendarRange(year, month);
+    return eachDayOfInterval({ start, end }).map(formatDay);
+  }, [year, month]);
 
   useEffect(() => {
-    setBaseEventsByMonth((prev) => ({
-      ...prev,
-      [currentMonthKey]: baseEvents,
-    }));
-  }, [baseEvents, currentMonthKey]);
+    const grouped = groupEventsByDay(baseEvents);
+    setBaseEventsByDay((prev) => {
+      const next = { ...prev };
+      visibleDays.forEach((day) => {
+        next[day] = grouped[day] ?? [];
+      });
+      return next;
+    });
+  }, [baseEvents, visibleDays]);
 
   useEffect(() => {
     if (isEditMode) {
-      setEvents(draftEventsByMonth[currentMonthKey] ?? baseEvents);
+      const grouped = groupEventsByDay(baseEvents);
+      setEvents(visibleDays.flatMap((day) => draftEventsByDay[day] ?? grouped[day] ?? []));
       return;
     }
 
     setEvents(baseEvents);
-  }, [baseEvents, currentMonthKey, draftEventsByMonth, isEditMode]);
+  }, [baseEvents, draftEventsByDay, isEditMode, visibleDays]);
 
   const selectedEvent = selectedEventId ? events.find((event) => event.id === selectedEventId) ?? null : null;
   const selectedEventType = selectedEvent ? getEventType(selectedEvent) : null;
@@ -257,12 +270,16 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
     setSelectedType('');
   };
 
-  const syncMonthDraft = (nextEvents: CalendarEvent[]) => {
+  const syncDraft = (nextEvents: CalendarEvent[]) => {
     setEvents(nextEvents);
-    setDraftEventsByMonth((prev) => ({
-      ...prev,
-      [currentMonthKey]: nextEvents,
-    }));
+    const grouped = groupEventsByDay(nextEvents);
+    setDraftEventsByDay((prev) => {
+      const next = { ...prev };
+      visibleDays.forEach((day) => {
+        next[day] = grouped[day] ?? [];
+      });
+      return next;
+    });
   };
 
   const handleTypeSelect = (type: string) => {
@@ -308,7 +325,7 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
         return event;
       });
 
-      syncMonthDraft(nextEvents);
+      syncDraft(nextEvents);
     } else {
       const availableTypes = getAvailableTypesForDate(events, selectedDate, null);
       if (!availableTypes.includes(selectedTypeValue)) return;
@@ -327,7 +344,7 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
         },
       ];
 
-      syncMonthDraft(nextEvents);
+      syncDraft(nextEvents);
     }
 
     handleClearSelection();
@@ -337,61 +354,26 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
     if (!selectedEventId) return;
 
     const nextEvents = events.filter((event) => event.id !== selectedEventId);
-    syncMonthDraft(nextEvents);
+    syncDraft(nextEvents);
     handleClearSelection();
   };
 
   const saveChanges = useCallback(async () => {
-    const draftSnapshot: Record<string, CalendarEvent[]> = {
-      ...draftEventsByMonth,
-      [currentMonthKey]: events,
-    };
+    const currentByDay = groupEventsByDay(events);
+    const draftSnapshot: Record<string, CalendarEvent[]> = { ...draftEventsByDay };
+    visibleDays.forEach((day) => {
+      draftSnapshot[day] = currentByDay[day] ?? [];
+    });
 
-    const monthKeys = Object.keys(draftSnapshot);
+    for (const day of Object.keys(draftSnapshot)) {
+      const before = getAssignmentForDay(baseEventsByDay[day] ?? []);
+      const after = getAssignmentForDay(draftSnapshot[day] ?? []);
 
-    for (const monthKey of monthKeys) {
-      const baseByDay = getAssignmentsFromEvents(baseEventsByMonth[monthKey] ?? []);
-      const currentByDay = getAssignmentsFromEvents(draftSnapshot[monthKey] ?? []);
-      const targetDays = new Set<string>([...baseByDay.keys(), ...currentByDay.keys()]);
+      if (isSameTeacherAssignment(before, after)) continue;
 
-      for (const day of targetDays) {
-        const before = baseByDay.get(day) ?? { selfStudyTeacherId: null, leaveSeatTeacherId: null, seventhPeriodTeacherId: null };
-        const after = currentByDay.get(day) ?? { selfStudyTeacherId: null, leaveSeatTeacherId: null, seventhPeriodTeacherId: null };
-
-        if (isSameTeacherAssignment(before, after)) continue;
-
-        if (!hasAnyAssignment(before) && hasAnyAssignment(after)) {
-          try {
-            await createScheduleMutation.mutateAsync({
-              day,
-              self_study_supervision_teacher_id: after.selfStudyTeacherId,
-              leave_seat_supervision_teacher_id: after.leaveSeatTeacherId,
-              seventh_period_supervision_teacher_id: after.seventhPeriodTeacherId,
-            });
-          } catch (error) {
-            const errorMessage = getApiErrorMessage(error);
-            if (errorMessage.includes('필수입니다')) {
-              const missingFields: string[] = [];
-              if (errorMessage.includes('이석')) missingFields.push('이석 감독 교사');
-              if (errorMessage.includes('자습')) missingFields.push('자습 감독 교사');
-              if (errorMessage.includes('7교시')) missingFields.push('7교시 감독 교사');
-              throw new Error(`${day} 날짜의 ${missingFields.join(', ')}를 설정해주세요.`);
-            }
-            throw error;
-          }
-          continue;
-        }
-
-        if (hasAnyAssignment(before) && !hasAnyAssignment(after)) {
-          await deleteScheduleMutation.mutateAsync({
-            day,
-            type: 'all',
-          });
-          continue;
-        }
-
+      if (!hasAnyAssignment(before) && hasAnyAssignment(after)) {
         try {
-          await updateScheduleMutation.mutateAsync({
+          await createScheduleMutation.mutateAsync({
             day,
             self_study_supervision_teacher_id: after.selfStudyTeacherId,
             leave_seat_supervision_teacher_id: after.leaveSeatTeacherId,
@@ -408,11 +390,39 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
           }
           throw error;
         }
+        continue;
+      }
+
+      if (hasAnyAssignment(before) && !hasAnyAssignment(after)) {
+        await deleteScheduleMutation.mutateAsync({
+          day,
+          type: 'all',
+        });
+        continue;
+      }
+
+      try {
+        await updateScheduleMutation.mutateAsync({
+          day,
+          self_study_supervision_teacher_id: after.selfStudyTeacherId,
+          leave_seat_supervision_teacher_id: after.leaveSeatTeacherId,
+          seventh_period_supervision_teacher_id: after.seventhPeriodTeacherId,
+        });
+      } catch (error) {
+        const errorMessage = getApiErrorMessage(error);
+        if (errorMessage.includes('필수입니다')) {
+          const missingFields: string[] = [];
+          if (errorMessage.includes('이석')) missingFields.push('이석 감독 교사');
+          if (errorMessage.includes('자습')) missingFields.push('자습 감독 교사');
+          if (errorMessage.includes('7교시')) missingFields.push('7교시 감독 교사');
+          throw new Error(`${day} 날짜의 ${missingFields.join(', ')}를 설정해주세요.`);
+        }
+        throw error;
       }
     }
 
-    setDraftEventsByMonth({});
-  }, [baseEventsByMonth, createScheduleMutation, currentMonthKey, deleteScheduleMutation, draftEventsByMonth, events, updateScheduleMutation]);
+    setDraftEventsByDay({});
+  }, [baseEventsByDay, createScheduleMutation, deleteScheduleMutation, draftEventsByDay, events, updateScheduleMutation, visibleDays]);
 
   useImperativeHandle(ref, () => ({
     saveChanges,
@@ -421,7 +431,7 @@ const AdminSupervisionContent = forwardRef<AdminSupervisionContentHandle, AdminS
   useEffect(() => {
     if (!isEditMode) {
       handleClearSelection();
-      setDraftEventsByMonth({});
+      setDraftEventsByDay({});
     }
     if (!isCountOpen) {
       setIsClosing(false);
