@@ -18,7 +18,7 @@ import * as S from './style';
 
 interface MovementMapProps {
     onBack: () => void;
-    formData: MovementFormData;``
+    formData: MovementFormData;
 }
 
 export default function MovementMap({ onBack, formData }: MovementMapProps) {
