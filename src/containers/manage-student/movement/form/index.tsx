@@ -116,28 +116,6 @@ export default function MovementForm({ onNext, onCancel, initialData, savedFormD
     };
 
     const handleNext = () => {
-        const today = getTodayDate();
-        const todayDate = new Date(today);
-        const selectedDateObj = new Date(selectedDate);
-
-        // 날짜가 오늘보다 이전인지 확인
-        if (selectedDate < today) {
-            toast.warning('오늘 이전 날짜는 선택할 수 없습니다.');
-            return;
-        }
-
-        // 다음 주 월요일부터 막기 (이번 주 일요일까지만 허용)
-        const currentDayOfWeek = todayDate.getDay(); // 0(일) ~ 6(토)
-        const daysUntilSunday = 7 - currentDayOfWeek; // 이번 주 일요일까지 남은 일수
-        const thisWeekSunday = new Date(todayDate);
-        thisWeekSunday.setDate(todayDate.getDate() + daysUntilSunday);
-        thisWeekSunday.setHours(23, 59, 59, 999); // 일요일 끝까지
-
-        if (selectedDateObj > thisWeekSunday) {
-            toast.warning('이번주 이후의 이석 작성은 불가능합니다.');
-            return;
-        }
-
         // 모든 필드가 입력되었는지 확인하고 toast로 알림
         if (!selectedDate) {
             toast.warning('날짜를 선택해주세요.');
