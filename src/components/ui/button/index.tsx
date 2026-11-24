@@ -7,11 +7,12 @@ interface ButtonProps {
   variant: 'cancel' | 'confirm' | 'delete';
   width?: string;
   isLoading?: boolean;
+  disabled?: boolean;
 }
 
-export default function Button({ text, onClick, variant, width, isLoading = false }: ButtonProps) {
+export default function Button({ text, onClick, variant, width, isLoading = false, disabled = false }: ButtonProps) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (isLoading) return;
+    if (isLoading || disabled) return;
     onClick?.(e);
   };
 
@@ -21,6 +22,8 @@ export default function Button({ text, onClick, variant, width, isLoading = fals
       onClick={handleClick}
       $variant={variant}
       $width={width}
+      $disabled={disabled}
+      disabled={disabled}
     >
       <S.Name>
         {text}
