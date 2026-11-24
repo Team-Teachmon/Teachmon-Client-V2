@@ -15,6 +15,7 @@ interface ExchangeDetailModalProps {
     onReject: () => void;
     onCheck?: () => void;
     onSubmit?: (reason: string) => void;
+    isProcessing?: boolean;
 }
 
 export default function ExchangeDetailModal({
@@ -26,6 +27,7 @@ export default function ExchangeDetailModal({
     onReject,
     onCheck,
     onSubmit,
+    isProcessing = false,
 }: ExchangeDetailModalProps) {
     const [reason, setReason] = useState('');
     const { isMobile } = useDevice();
@@ -134,8 +136,8 @@ export default function ExchangeDetailModal({
                         </>
                     ) : isReceiver && isPending ? (
                         <>
-                            <Button variant="delete" text="거절" onClick={onReject} width="50%" />
-                            <Button variant="confirm" text="수락" onClick={onAccept} width="50%" />
+                            <Button variant="delete" text="거절" onClick={onReject} width="50%" disabled={isProcessing} />
+                            <Button variant="confirm" text="수락" onClick={onAccept} width="50%" disabled={isProcessing} />
                         </>
                     ) : (
                         <>

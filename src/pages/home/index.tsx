@@ -34,8 +34,9 @@ export default function HomePage() {
     const { data: mySupervisionDays } = useMySupervisionDaysQuery(month);
     const { data: exchangeRequests, isLoading: isExchangeRequestsLoading } = useExchangeRequestsQuery();
     const { data: weeklyExitStudents, isLoading: isWeeklyExitStudentsLoading } = useWeeklyExitStudentsQuery();
-    const { mutate: acceptExchange } = useAcceptExchangeRequestMutation();
-    const { mutate: rejectExchange } = useRejectExchangeRequestMutation();
+    const { mutate: acceptExchange, isPending: isAccepting } = useAcceptExchangeRequestMutation();
+    const { mutate: rejectExchange, isPending: isRejecting } = useRejectExchangeRequestMutation();
+    const isProcessingExchange = isAccepting || isRejecting;
     const { mutate: checkExchange } = useCheckExchangeRequestMutation();
 
     const exchanges = [...(exchangeRequests ?? [])].sort((a, b) => {
@@ -58,7 +59,7 @@ export default function HomePage() {
     };
 
     const handleAccept = () => {
-        if (!selectedExchange?.id) return;
+        if (!selectedExchange?.id || isProcessingExchange) return;
         acceptExchange(selectedExchange.id, {
             onSuccess: () => {
                 toast.success('교체요청을 수락했어요.');
@@ -74,7 +75,7 @@ export default function HomePage() {
     };
 
     const handleReject = () => {
-        if (!selectedExchange?.id) return;
+        if (!selectedExchange?.id || isProcessingExchange) return;
         rejectExchange(selectedExchange.id, {
             onSuccess: () => {
                 toast.success('교체요청을 거절했어요.');
@@ -136,6 +137,7 @@ export default function HomePage() {
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onCheck={handleCheck}
+                isProcessing={isProcessingExchange}
             />
         </S.Container>
     );
